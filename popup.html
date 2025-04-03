@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      width: 200px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .count {
+      margin-top: 5px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .timer {
+      margin-top: 5px;
+      font-size: 12px;
+      text-align: center;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <button id="toggleRefresh">Start Refreshing</button>
+  <div id="status" class="status">Not refreshing</div>
+  <div id="timer" class="timer">Next refresh in: --:--</div>
+  <div id="count" class="count">Refresh Count: 0</div>
+  <script src="popup.js"></script>
+</body>
+</html>
