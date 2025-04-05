@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const statusDiv = document.getElementById('status');
     const countDiv = document.getElementById('count');
     const timerDiv = document.getElementById('timer');
+    const minTimeInput = document.getElementById('minTime');
+    const maxTimeInput = document.getElementById('maxTime');
     let isRefreshing = false;
     let refreshCount = 0;
     let activeTabId = null;
@@ -79,7 +81,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const action = isRefreshing ? "startRefreshing" : "stopRefreshing";
         console.log(`Sending ${action} message for tab ${activeTabId}`);
-        chrome.runtime.sendMessage({ action, tabId: activeTabId }, function (response) {
+        
+        // Get user input values or use defaults
+        let minTime = parseFloat(minTimeInput.value);
+        let maxTime = parseFloat(maxTimeInput.value);
+        let endTime = document.getElementById('endTime').value;
+        
+        // Validate inputs
+        if (isNaN(minTime)) minTime = null; // Use default in background.js
+        if (isNaN(maxTime)) maxTime = null; // Use default in background.js
+        if (minTime && maxTime && minTime >= maxTime) {
+            alert("Minimum time must be less than maximum time");
+            isRefreshing = false;
+            updateUI();
+            return;
+        }
+        
+        chrome.runtime.sendMessage({ 
+            action, 
+            tabId: activeTabId,
+            minTime,
+            maxTime,
+            endTime
+        }, function (response) {
             if (chrome.runtime.lastError) {
                 console.error(`Error sending ${action} message:`, chrome.runtime.lastError.message);
             } else {

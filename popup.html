@@ -40,9 +40,35 @@
       text-align: center;
       color: #666;
     }
+    .settings {
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .settings label {
+      display: block;
+      margin-bottom: 3px;
+    }
+    .settings input {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
+  <div class="settings">
+    <label for="minTime">Minimum refresh time (minutes):</label>
+    <input type="number" id="minTime" min="0.5" step="0.5" placeholder="Default: 5">
+    
+    <label for="maxTime">Maximum refresh time (minutes):</label>
+    <input type="number" id="maxTime" min="1" step="0.5" placeholder="Default: 10">
+    
+    <label for="endTime">Stop refreshing at:</label>
+    <input type="time" id="endTime">
+  </div>
   <button id="toggleRefresh">Start Refreshing</button>
   <div id="status" class="status">Not refreshing</div>
   <div id="timer" class="timer">Next refresh in: --:--</div>

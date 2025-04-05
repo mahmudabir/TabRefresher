@@ -1,17 +1,34 @@
 let refreshCounts = {};
 let activeRefreshes = new Set();
-let nextRefreshTimes = {};  // Add this line
-let minimumMinutes = 10;
-let maximumMinutes = 20;
+let nextRefreshTimes = {};
+let endTimes = {}; // Store end times for each tab
+let minimumMinutes = 5; // Default minimum refresh time
+let maximumMinutes = 10; // Default maximum refresh time
 
 function getRandomRefreshTime() {
     return Math.random() * (maximumMinutes - minimumMinutes) + minimumMinutes;
 }
 
-function startRefreshing(tabId) {
+function startRefreshing(tabId, minTime, maxTime, endTime) {
     stopRefreshing(tabId);
     refreshCounts[tabId] = refreshCounts[tabId] || 0;
     activeRefreshes.add(tabId);
+    
+    // Update global min/max if provided
+    if (minTime !== null && minTime !== undefined) {
+        minimumMinutes = minTime;
+    }
+    if (maxTime !== null && maxTime !== undefined) {
+        maximumMinutes = maxTime;
+    }
+    
+    // Store end time if provided
+    if (endTime) {
+        endTimes[tabId] = endTime;
+        console.log(`Tab ${tabId} will stop refreshing at ${endTime}`);
+    } else {
+        delete endTimes[tabId]; // No end time set
+    }
     
     const periodInMinutes = getRandomRefreshTime();
     const nextRefreshTime = Date.now() + (periodInMinutes * 60 * 1000);
@@ -20,7 +37,7 @@ function startRefreshing(tabId) {
     chrome.alarms.create(`refresh-${tabId}`, {
         delayInMinutes: periodInMinutes
     });
-    console.log(`Tab ${tabId} will refresh in ${periodInMinutes} minutes`);
+    console.log(`Tab ${tabId} will refresh in ${periodInMinutes} minutes (range: ${minimumMinutes}-${maximumMinutes})`);
 }
 
 function stopRefreshing(tabId) {
@@ -28,6 +45,7 @@ function stopRefreshing(tabId) {
     activeRefreshes.delete(tabId);
     delete refreshCounts[tabId];
     delete nextRefreshTimes[tabId];  // Clean up refresh time
+    delete endTimes[tabId];  // Clean up end time
 }
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -38,6 +56,21 @@ chrome.alarms.onAlarm.addListener((alarm) => {
             if (chrome.runtime.lastError || !tab) {
                 stopRefreshing(tabId);
                 return;
+            }
+            
+            // Check if we've reached the end time
+            if (endTimes[tabId]) {
+                const now = new Date();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                
+                const [endHours, endMinutes] = endTimes[tabId].split(':').map(Number);
+                const endTime = endHours * 60 + endMinutes;
+                
+                if (currentTime >= endTime) {
+                    console.log(`End time reached for tab ${tabId}. Stopping refreshes.`);
+                    stopRefreshing(tabId);
+                    return;
+                }
             }
             
             // Perform the refresh
@@ -64,7 +97,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("Received message:", request);
     if (request.action === "startRefreshing" && request.tabId) {
         console.log(`Starting refresh for tab ${request.tabId}`);
-        startRefreshing(request.tabId);
+        startRefreshing(request.tabId, request.minTime, request.maxTime, request.endTime);
         sendResponse({ success: true });
     } else if (request.action === "stopRefreshing" && request.tabId) {
         console.log(`Stopping refresh for tab ${request.tabId}`);
